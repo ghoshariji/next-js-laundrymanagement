@@ -1,0 +1,28 @@
+import mongoose,{Schema, models} from "mongoose";
+
+
+const userSchema = new Schema({
+    name:{
+        type:String,
+        required:true
+    },
+    hostel:{
+        type:String,
+        required:true
+    },
+    room:{
+        type:String,
+        required:true
+    },
+    email:{
+        type:String,
+        required:true
+    },
+    password:{
+        type:String,
+        required:true
+    }, 
+},{timestamps:true})
+
+const user = models.User || mongoose.model("User",userSchema)
+export default user;
