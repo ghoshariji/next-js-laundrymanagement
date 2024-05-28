@@ -1,5 +1,6 @@
 "use state"
 
+import Footer from "@/component/Footer"
 import Navbar from "../_navbar/navbar"
 
 const links = [
@@ -76,7 +77,7 @@ const links = [
           </div>
         </div>
       </div>
-      
+      <Footer/>
 </>
     )
   }

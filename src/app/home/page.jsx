@@ -3,6 +3,7 @@ import { useState } from 'react'
 import Navbar from "../_navbar/navbar";
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
+import Footer from '@/component/Footer';
 
 export default function Home() {
   const router = useRouter()
@@ -59,6 +60,7 @@ export default function Home() {
         </div>
       </div>
     </div>
+    <Footer/>
         </>
     )
 }
