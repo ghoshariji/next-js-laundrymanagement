@@ -19,13 +19,14 @@ import { ExclamationTriangleIcon } from "@heroicons/react/24/outline";
 const Page = () => {
   const [open, setOpen] = useState(true);
   const { data: session, status } = useSession();
-  const [data, setData] = useState(null);
+  const [data, setData] = useState([]);
   const [message, setMessage] = useState(null);
   const [stat, setStatus] = useState(null);
   const [modalData, setModalData] = useState({});
   const [loading, setLoading] = useState(false);
   const [id, setId] = useState(null);
   const router = useRouter();
+  const [originalData,setOriginalData] = useState([])
   // if (!session) {
   //   toast.error("You are not Authorized or Login First");
   //   setTimeout(() => {
@@ -58,12 +59,13 @@ const Page = () => {
   const fetchData = async () => {
     const res = await fetch("api/history");
     const data = await res.json();
+    setOriginalData(data.data)
     setData(data.data);
     setLoading(false);
   };
   useEffect(() => {
     setLoading(true);
-    setOpen(false)
+    setOpen(false);
     fetchData();
   }, []);
 
@@ -75,99 +77,145 @@ const Page = () => {
     setId(post._id);
   };
 
+  const [room, setRoom] = useState(null);
+  const [year, setYear] = useState(null);
+
+  const handleSearch = () => {
+    const lowerYear = year
+    const lowerRoom = room
+    console.log(lowerRoom,lowerYear)
+    if (lowerYear === '' || lowerRoom === '') {
+      setData(originalData);
+    } else {
+      const filterData = originalData.filter((val) => {
+        const newDate = new Date(val.createdAt);
+        const yearPart = newDate.getFullYear().toString(); 
+        console.log(val.room)   
+        return val.room === lowerRoom && yearPart === lowerYear;
+      });
+      setData(filterData);
+    }
+  };
+
   return (
     <>
       <Toaster />
       <AdminNav />
-
-      <div className="px-10 py-5">
-        <div className="flex flex-col sm:flex-row sm:justify-between gap-4 mb-5">
-          <div>
-            <label
-              htmlFor="sort"
-              className="block text-sm font-medium text-gray-700"
-            >
-              Sort by
-            </label>
-            <select
-              id="sort"
-              name="sort"
-              className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
-            >
-              <option value="date">Date</option>
-              <option value="room">Room Number</option>
-            </select>
-          </div>
-        </div>
+      <div className="px-10 py-5 flex gap-4">
+      <div className="flex items-center">
+        <label
+          htmlFor="sort1"
+          className="block text-sm font-medium text-gray-700 mr-4"
+        >
+          Sort by Year.
+        </label>
+        <select
+          id="sort1"
+          name="sort1"
+          onChange={(e) => setYear(e.target.value)}
+          className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        >
+          <option value="">-- Select Year --</option>
+          <option value="2024">2024</option>
+          <option value="2023">2023</option>
+        </select>
       </div>
+
+      <div className="flex items-center">
+        <label
+          htmlFor="sort2"
+          className="block text-sm font-medium text-gray-700 mr-4"
+        >
+          Sort by Room No.
+        </label>
+        <input
+          type="text"
+          id="customRoom"
+          name="customRoom"
+          onChange={(e) => setRoom(e.target.value)}
+          value={room}
+          placeholder="Enter Room No."
+          className="block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+        />
+      </div>
+
+      <button
+        type="button"
+        className="px-5 py-2 bg-blue-500 text-white rounded-md"
+        onClick={handleSearch}
+      >
+        Search
+      </button>
+    </div>
       {loading ? (
         <Spin />
       ) : (
         <ul role="list" className="divide-y divide-gray-100 px-10">
-          {data && data.map((person) => (
-            <li
-              key={person.email}
-              className="flex justify-between gap-x-6 py-5"
-            >
-              <div className="flex min-w-0 gap-x-4">
-                <img
-                  className="h-12 w-12 flex-none rounded-full bg-gray-50"
-                  src={person.imageUrl}
-                  alt=""
-                />
-                <div className="min-w-0 flex-auto">
-                  <p className="text-sm font-semibold leading-6 text-gray-900">
-                    {person.name}
-                  </p>
-                  <p className="mt-1 truncate text-xs leading-5 text-gray-500">
-                    {person.email}
-                  </p>
+          {data &&
+            data.map((person) => (
+              <li
+                key={person.email}
+                className="flex justify-between gap-x-6 py-5"
+              >
+                <div className="flex min-w-0 gap-x-4">
+                  <img
+                    className="h-12 w-12 flex-none rounded-full bg-gray-50"
+                    src={person.imageUrl}
+                    alt=""
+                  />
+                  <div className="min-w-0 flex-auto">
+                    <p className="text-sm font-semibold leading-6 text-gray-900">
+                      {person.name}
+                    </p>
+                    <p className="mt-1 truncate text-xs leading-5 text-gray-500">
+                      {person.email}
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-                <p className="text-sm leading-6 text-gray-900">
-                  {person.isPlaced}
-                </p>
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  <time dateTime={person.createdAt}>
-                    {new Date(person.createdAt).toLocaleDateString()}
-                  </time>
-                </p>
-
-                <div className="mt-1 flex items-center gap-x-1.5">
-                  <p className="text-xs leading-5 text-gray-500">
-                    Room : {person.room}
+                <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
+                  <p className="text-sm leading-6 text-gray-900">
+                    {person.isPlaced}
                   </p>
-                </div>
-              </div>
-
-              <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end justify-center">
-                <div className="mt-1 flex items-center gap-x-1.5">
-                  <button
-                    className="text-base px-3 py-1.5 leading-6 text-gray-500 bg-gray-200 rounded-md hover:bg-gray-300"
-                    onClick={() => handleModal(person)}
-                  >
-                    edit
-                  </button>
-                </div>
-              </div>
-
-              <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end justify-center">
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  <time dateTime={person.createdAt}>
-                    {new Date(person.createdAt).toLocaleDateString()}
-                  </time>
-                </p>
-
-                <div className="mt-1 flex items-center gap-x-1.5">
-                  <p className="text-xs leading-5 text-gray-500">
-                    {person.isPlaced === "pending" ? "Pending" : "Accepted"}
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                    <time dateTime={person.createdAt}>
+                      {new Date(person.createdAt).toLocaleDateString()}
+                    </time>
                   </p>
+
+                  <div className="mt-1 flex items-center gap-x-1.5">
+                    <p className="text-xs leading-5 text-gray-500">
+                      Room : {person.room}
+                    </p>
+                  </div>
                 </div>
-              </div>
-            </li>
-          ))}
+
+                <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end justify-center">
+                  <div className="mt-1 flex items-center gap-x-1.5">
+                    <button
+                      className="text-base px-3 py-1.5 leading-6 text-gray-500 bg-gray-200 rounded-md hover:bg-gray-300"
+                      onClick={() => handleModal(person)}
+                    >
+                      edit
+                    </button>
+                  </div>
+                </div>
+
+                <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end justify-center">
+                  <p className="mt-1 text-xs leading-5 text-gray-500">
+                    <time dateTime={person.createdAt}>
+                      {new Date(person.createdAt).toLocaleDateString()}
+                    </time>
+                  </p>
+
+                  <div className="mt-1 flex items-center gap-x-1.5">
+                    <p className="text-xs leading-5 text-gray-500">
+                      {person.isPlaced === "pending" ? "Pending" : "Accepted"}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            ))}
         </ul>
       )}
 
