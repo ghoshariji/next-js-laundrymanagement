@@ -2,6 +2,9 @@
 
 import Footer from "@/component/Footer";
 import Navbar from "../_navbar/navbar";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
 
 const people = [
   {
@@ -59,15 +62,33 @@ const people = [
 ];
 
 export default function Example() {
+  const [data, setData] = useState(null);
+  const [email, setEmail] = useState(null);
+  const { data: session } = useSession();
+  const fetchData = async () => {
+    setEmail(session.user.email);
+    const res = await fetch("api/user-history", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: session.user.email }),
+    });
+    const data = await res.json();
+    setData(data.data);
+  };
+  useEffect(() => {
+    fetchData();
+  }, [session]);
   return (
     <>
       <Navbar />
 
       <ul role="list" className="divide-y divide-gray-100 px-10">
-        {people.map((person) => (
+        {data && data.map((person) => (
           <li key={person.email} className="flex justify-between gap-x-6 py-5">
             <div className="flex min-w-0 gap-x-4">
-              <img
+              <Image
                 className="h-12 w-12 flex-none rounded-full bg-gray-50"
                 src={person.imageUrl}
                 alt=""
@@ -82,22 +103,20 @@ export default function Example() {
               </div>
             </div>
             <div className="hidden shrink-0 sm:flex sm:flex-col sm:items-end">
-              <p className="text-sm leading-6 text-gray-900">{person.role}</p>
-              {person.lastSeen ? (
-                <p className="mt-1 text-xs leading-5 text-gray-500">
-                  Last seen{" "}
-                  <time dateTime={person.lastSeenDateTime}>
-                    {person.lastSeen}
-                  </time>
+              <p className="text-sm leading-6 text-gray-900">
+                {person.isPlaced}
+              </p>
+              <p className="mt-1 text-xs leading-5 text-gray-500">
+                <time dateTime={person.createdAt}>
+                  {new Date(person.createdAt).toLocaleDateString()}
+                </time>
+              </p>
+
+              <div className="mt-1 flex items-center gap-x-1.5">
+                <p className="text-xs leading-5 text-gray-500">
+                  Room : {person.room}
                 </p>
-              ) : (
-                <div className="mt-1 flex items-center gap-x-1.5">
-                  <div className="flex-none rounded-full bg-emerald-500/20 p-1">
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                  </div>
-                  <p className="text-xs leading-5 text-gray-500">Online</p>
-                </div>
-              )}
+              </div>
             </div>
           </li>
         ))}

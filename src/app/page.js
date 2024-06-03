@@ -1,5 +1,5 @@
 "use client";
-import { Fragment, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import {
   Dialog,
   DialogPanel,
@@ -29,7 +29,33 @@ import {
 import { useRouter } from "next/navigation";
 import Footer from "@/component/Footer";
 import Link from "next/link"
+import { useSession } from "next-auth/react";
+
+
 export default function Home() {
+  
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  useEffect(() => {
+    if (status === "loading") return; 
+    if (!session) {
+      router.push("/");
+    } else {
+      if (session.user.isAdmin) {
+        router.push("/admin"); 
+      } else {
+        router.push("/home"); 
+      }
+    }
+  }, [session, status, router]);
+
+  if (!session || status === "loading") {
+    router.push("/")
+  }
+
+
+
   const stats = [
     { id: 1, name: "Transactions every 24 hours", value: "44 million" },
     { id: 2, name: "Assets under holding", value: "$119 trillion" },
@@ -76,8 +102,7 @@ export default function Home() {
     return classes.filter(Boolean).join(" ");
   }
 
-  const router = useRouter();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+ 
 
   const products1 = [
     {
